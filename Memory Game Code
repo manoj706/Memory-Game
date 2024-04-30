@@ -1,0 +1,117 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.Collections;
+
+public class NumberMemoryGame extends JFrame implements ActionListener {
+    private JButton[] buttons;
+    private int[] numbers;
+    private boolean[] flipped;
+    private int firstButtonIndex = -1;
+    private int secondButtonIndex = -1;
+    private int remainingPairs;
+    private JLabel statusLabel;
+
+    public NumberMemoryGame() {
+        setTitle("Number Memory Game");
+        setSize(400, 400);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLayout(new BorderLayout());
+
+        JPanel gridPanel = new JPanel();
+        gridPanel.setLayout(new GridLayout(4, 4));
+        add(gridPanel, BorderLayout.CENTER);
+
+        buttons = new JButton[16];
+        numbers = new int[16];
+        flipped = new boolean[16];
+        remainingPairs = 8;
+
+        ArrayList<Integer> values = new ArrayList<>();
+        for (int i = 0; i < 8; i++) {
+            values.add(i + 1);
+            values.add(i + 1);
+        }
+        Collections.shuffle(values);
+
+        for (int i = 0; i < 16; i++) {
+            buttons[i] = new JButton("?");
+            buttons[i].addActionListener(this);
+            gridPanel.add(buttons[i]);
+            numbers[i] = values.get(i);
+        }
+
+        statusLabel = new JLabel("Matches remaining: " + remainingPairs);
+        add(statusLabel, BorderLayout.SOUTH);
+
+        setVisible(true);
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        for (int i = 0; i < buttons.length; i++) {
+            if (e.getSource() == buttons[i]) {
+                if (!flipped[i]) {
+                    if (firstButtonIndex == -1) {
+                        firstButtonIndex = i;
+                        flipped[i] = true;
+                        buttons[i].setText(Integer.toString(numbers[i]));
+                    } else if (secondButtonIndex == -1) {
+                        secondButtonIndex = i;
+                        flipped[i] = true;
+                        buttons[i].setText(Integer.toString(numbers[i]));
+                        if (numbers[firstButtonIndex] == numbers[secondButtonIndex]) {
+                            remainingPairs--;
+                            statusLabel.setText("Matches remaining: " + remainingPairs);
+                            if (remainingPairs == 0) {
+                                JOptionPane.showMessageDialog(this, "Congratulations! You won!");
+                                resetGame();
+                            }
+                            firstButtonIndex = -1;
+                            secondButtonIndex = -1;
+                        } else {
+                            Timer timer = new Timer(1000, new ActionListener() {
+                                @Override
+                                public void actionPerformed(ActionEvent e) {
+                                    buttons[firstButtonIndex].setText("?");
+                                    buttons[secondButtonIndex].setText("?");
+                                    flipped[firstButtonIndex] = false;
+                                    flipped[secondButtonIndex] = false;
+                                    firstButtonIndex = -1;
+                                    secondButtonIndex = -1;
+                                }
+                            });
+                            timer.setRepeats(false);
+                            timer.start();
+                        }
+                    }
+                }
+                break;
+            }
+        }
+    }
+
+    private void resetGame() {
+        for (int i = 0; i < buttons.length; i++) {
+            buttons[i].setText("?");
+            flipped[i] = false;
+        }
+        remainingPairs = 8;
+        statusLabel.setText("Matches remaining: " + remainingPairs);
+        ArrayList<Integer> values = new ArrayList<>();
+        for (int i = 0; i < 8; i++) {
+            values.add(i + 1);
+            values.add(i + 1);
+        }
+        Collections.shuffle(values);
+        for (int i = 0; i < 16; i++) {
+            numbers[i] = values.get(i);
+        }
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(NumberMemoryGame::new);
+    }
+}
